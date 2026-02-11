@@ -2,13 +2,13 @@ import os
 import sys
 import subprocess
 
-# Шаблон имени: track1.ogg, track2.ogg, ...
+
 NAME_TEMPLATE = "track{}"
 
-# Форматы, которые конвертируем в .ogg
+
 SOURCE_EXTENSIONS = [".mp3", ".wav", ".flac"]
 
-# Конечное расширение
+
 TARGET_EXTENSION = ".ogg"
 
 
@@ -27,14 +27,14 @@ def find_ffmpeg():
     """
     folder = get_script_folder()
 
-    # 1) ffmpeg.exe или ffmpeg рядом со скриптом
+    
     local_candidates = ["ffmpeg.exe", "ffmpeg"]
     for name in local_candidates:
         path = os.path.join(folder, name)
         if os.path.isfile(path):
             return path
 
-    # 2) ffmpeg из PATH
+    
     return "ffmpeg"
 
 
@@ -62,10 +62,11 @@ def convert_to_ogg(folder, ffmpeg_path):
             result = subprocess.run(
                 [
                     ffmpeg_path,
-                    "-y",  # перезаписывать без вопросов (мы и так проверяем)
+                    "-y",  
                     "-i",
                     src_path,
-                    "-c:a",
+                    "-vn",  
+                    "-acodec",
                     "libvorbis",
                     "-qscale:a",
                     "5",
@@ -74,8 +75,10 @@ def convert_to_ogg(folder, ffmpeg_path):
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.STDOUT,
             )
+
             if result.returncode != 0:
                 print(f"Ошибка конвертации файла: {name}")
+
         except FileNotFoundError:
             print(
                 "Ошибка: ffmpeg не найден. Убедитесь, что ffmpeg установлен или лежит рядом со скриптом."
@@ -87,11 +90,9 @@ def rename_ogg_files(folder):
     print("\n=== Переименование .ogg ===")
     files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
 
-    # Исключаем сам скрипт/исполняемый файл
     self_name = os.path.basename(sys.argv[0])
     files = [f for f in files if f != self_name]
 
-    # Берём только .ogg
     ogg_files = [f for f in files if os.path.splitext(f)[1].lower() == TARGET_EXTENSION]
 
     ogg_files.sort()
@@ -107,8 +108,8 @@ def rename_ogg_files(folder):
         old_path = os.path.join(folder, old_name)
         base, ext = os.path.splitext(old_name)
 
-        new_base = NAME_TEMPLATE.format(counter)  # track1, track2, ...
-        new_name = new_base + TARGET_EXTENSION  # track1.ogg
+        new_base = NAME_TEMPLATE.format(counter)  
+        new_name = new_base + TARGET_EXTENSION 
         new_path = os.path.join(folder, new_name)
 
         if os.path.exists(new_path) and old_path.lower() != new_path.lower():
